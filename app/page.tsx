@@ -6,7 +6,6 @@ import {
   Car,
   MapPin,
   Plane,
-  Search,
   ShieldCheck,
   Sparkles,
   Star,
@@ -119,8 +118,8 @@ export default function Home() {
               <div className="mt-3 flex items-start gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-50">
                 <Bot className="mt-0.5 size-5 shrink-0" />
                 <p>
-                  Try AI Search: "I am travelling with 6 people from KLIA for 3
-                  days under RM500."
+                  Try AI Search: &quot;I am travelling with 6 people from KLIA for
+                  3 days under RM500.&quot;
                 </p>
               </div>
             </div>

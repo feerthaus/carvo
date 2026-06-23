@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Bot,
-  Car,
   Gauge,
   MapPinned,
   Plane,
@@ -76,8 +75,8 @@ export default function CommandCenterPage() {
           <div className="glass-panel rounded-3xl p-5">
             <p className="text-sm text-stone-400">Carvo Copilot</p>
             <p className="mt-2 max-w-sm text-lg text-white">
-              "Occupancy is forecast to hit 90%. Increase Bezza pricing by RM20
-              and promote Alza weekend inventory."
+              &quot;Occupancy is forecast to hit 90%. Increase Bezza pricing by
+              RM20 and promote Alza weekend inventory.&quot;
             </p>
           </div>
         </div>
