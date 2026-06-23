@@ -15,10 +15,8 @@ import {
 } from "lucide-react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  createBookingRequest,
-  initialBookingRequestState,
-} from "./actions";
+import { createBookingRequest } from "./actions";
+import { initialBookingRequestState } from "./booking-request-state";
 import type {
   StorefrontLocation,
   StorefrontVehicle,

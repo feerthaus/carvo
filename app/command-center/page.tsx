@@ -125,6 +125,12 @@ export default async function CommandCenterPage() {
                 commandCenter.airportOperations.map((operation) => (
                   <div key={operation.id} className="grid gap-4 rounded-3xl border border-white/10 bg-white/[0.04] p-5 md:grid-cols-4 md:items-center">
                     <div>
+                      <p className="text-sm text-stone-400">Reference</p>
+                      <p className="mt-1 font-semibold text-white">
+                        {operation.reference}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm text-stone-400">Pickup</p>
                       <p className="mt-1 font-semibold text-white">
                         {operation.pickup}
@@ -136,19 +142,13 @@ export default async function CommandCenterPage() {
                         {operation.vehicle}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-stone-400">Customer</p>
-                      <p className="mt-1 font-semibold text-white">
-                        {operation.customer}
-                      </p>
-                    </div>
                     <div className="rounded-2xl bg-amber-300/10 p-4 text-amber-100">
-                      ETA {operation.eta}
+                      {operation.status} at {operation.eta}
                     </div>
                   </div>
                 ))
               ) : (
-                <EmptyState message="No accessible pickup bookings for today. Tenant login is required for private booking operations." />
+                <EmptyState message="No upcoming booking summaries are available yet." />
               )}
             </div>
           </section>

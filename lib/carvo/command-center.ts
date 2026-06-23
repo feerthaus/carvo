@@ -23,10 +23,11 @@ export type FleetRadarItem = {
 
 export type AirportOperation = {
   id: string;
+  reference: string;
   pickup: string;
   vehicle: string;
-  customer: string;
   eta: string;
+  status: string;
 };
 
 export type CommandCenterEvent = {
@@ -65,13 +66,14 @@ type VehicleRow = {
 
 type BookingRow = {
   id: string;
-  customer_name: string | null;
   ends_at: string;
   pickup_location_id: string | null;
+  pickup_location_name?: string;
   quoted_total_myr: number | null;
   starts_at: string;
   status: string;
   vehicle_id: string | null;
+  vehicle_name?: string;
 };
 
 const statusOrder: Array<{
@@ -106,6 +108,7 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
     { data: vehicles },
     { data: locations },
     { data: bookings },
+    { data: publicBookings },
     { data: activityEvents },
   ] = await Promise.all([
     supabase
@@ -126,6 +129,9 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
       .eq("tenant_id", tenant.id)
       .order("starts_at", { ascending: true })
       .limit(25),
+    supabase.rpc("get_public_command_center_bookings", {
+      target_tenant_slug: "putra-auto-rental",
+    }),
     supabase
       .from("activity_events")
       .select("id, title, body, created_at")
@@ -136,20 +142,23 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
 
   const fleet = (vehicles ?? []) as VehicleRow[];
   const tenantBookings = (bookings ?? []) as BookingRow[];
+  const commandBookings = ((publicBookings ?? []) as BookingRow[]).length > 0
+    ? ((publicBookings ?? []) as BookingRow[])
+    : tenantBookings;
   const locationNames = new Map((locations ?? []).map((item) => [item.id, item.name]));
   const vehicleNames = new Map(fleet.map((vehicle) => [vehicle.id, vehicle.name]));
   const now = new Date();
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
-  const revenueToday = tenantBookings
+  const revenueToday = commandBookings
     .filter((booking) => isWithin(new Date(booking.starts_at), todayStart, todayEnd))
     .reduce((sum, booking) => sum + Number(booking.quoted_total_myr ?? 0), 0);
-  const activeRentals = tenantBookings.filter((booking) => {
+  const activeRentals = commandBookings.filter((booking) => {
     const startsAt = new Date(booking.starts_at);
     const endsAt = new Date(booking.ends_at);
     return booking.status === "confirmed" && startsAt <= now && endsAt >= now;
   }).length;
-  const upcomingReturns = tenantBookings.filter((booking) =>
+  const upcomingReturns = commandBookings.filter((booking) =>
     isWithin(new Date(booking.ends_at), todayStart, todayEnd),
   ).length;
   const availableCars = fleet.filter((vehicle) => vehicle.status === "available").length;
@@ -166,8 +175,8 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
     metrics: [
       {
         label: "Revenue today",
-        value: tenantBookings.length > 0 ? `RM${revenueToday.toLocaleString("en-MY")}` : "Locked",
-        delta: hasTenantSession ? "From bookings" : "Tenant login required",
+        value: commandBookings.length > 0 ? `RM${revenueToday.toLocaleString("en-MY")}` : "RM0",
+        delta: "From booking summaries",
       },
       {
         label: "Occupancy rate",
@@ -176,8 +185,8 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
       },
       {
         label: "Active rentals",
-        value: hasTenantSession ? String(activeRentals) : "Locked",
-        delta: hasTenantSession ? "Confirmed now" : "Tenant login required",
+        value: String(activeRentals),
+        delta: "Confirmed now",
       },
       {
         label: "Available cars",
@@ -186,8 +195,8 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
       },
       {
         label: "Upcoming returns",
-        value: hasTenantSession ? String(upcomingReturns) : "Locked",
-        delta: hasTenantSession ? "Due today" : "Tenant login required",
+        value: String(upcomingReturns),
+        delta: "Due today",
       },
     ],
     fleetRadar: statusOrder.map((item) => ({
@@ -195,15 +204,22 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
       color: item.color,
       count: fleet.filter((vehicle) => vehicle.status === item.status).length,
     })),
-    airportOperations: tenantBookings
-      .filter((booking) => isWithin(new Date(booking.starts_at), todayStart, todayEnd))
+    airportOperations: commandBookings
+      .filter((booking) => new Date(booking.starts_at) >= todayStart)
       .slice(0, 5)
       .map((booking) => ({
         id: booking.id,
-        pickup: locationNames.get(booking.pickup_location_id ?? "") ?? "Pickup pending",
-        vehicle: vehicleNames.get(booking.vehicle_id ?? "") ?? "Vehicle pending",
-        customer: booking.customer_name ?? "Customer pending",
+        reference: booking.id.slice(0, 8).toUpperCase(),
+        pickup:
+          booking.pickup_location_name ??
+          locationNames.get(booking.pickup_location_id ?? "") ??
+          "Pickup pending",
+        vehicle:
+          booking.vehicle_name ??
+          vehicleNames.get(booking.vehicle_id ?? "") ??
+          "Vehicle pending",
         eta: formatTime(booking.starts_at),
+        status: booking.status,
       })),
     activityEvents: (activityEvents ?? []).map((event) => ({
       id: event.id,

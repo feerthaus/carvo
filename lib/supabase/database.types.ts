@@ -464,6 +464,21 @@ export type Database = {
     }
     Functions: {
       current_user_is_platform_admin: { Args: never; Returns: boolean }
+      get_public_command_center_bookings: {
+        Args: { target_tenant_slug: string }
+        Returns: {
+          ends_at: string
+          id: string
+          pickup_location_id: string
+          pickup_location_name: string
+          quoted_total_myr: number
+          starts_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          tenant_id: string
+          vehicle_id: string
+          vehicle_name: string
+        }[]
+      }
       has_tenant_role: {
         Args: {
           accepted_roles: Database["public"]["Enums"]["tenant_member_role"][]
