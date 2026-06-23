@@ -11,17 +11,17 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-
-const fleet = [
-  ["Perodua Alza Premium", "7 seats", "RM168/day", "KLIA2 available"],
-  ["Honda City RS", "5 seats", "RM145/day", "Subang available"],
-  ["Toyota Vellfire", "7 seats", "RM520/day", "KLIA pre-book"],
-  ["Perodua Bezza", "5 seats", "RM95/day", "Cyberjaya ready"],
-];
+import { getPutraStorefront } from "@/lib/carvo/storefront";
 
 const badges = ["Verified Operator", "Top Rated", "Fast Response", "Most Booked"];
 
-export default function PutraAutoRentalPage() {
+export const dynamic = "force-dynamic";
+
+export default async function PutraAutoRentalPage() {
+  const storefront = await getPutraStorefront();
+  const featuredVehicle = storefront.vehicles[0];
+  const primaryLocation = storefront.locations[0];
+
   return (
     <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-12">
       <nav className="mx-auto flex max-w-7xl items-center justify-between">
@@ -33,7 +33,9 @@ export default function PutraAutoRentalPage() {
             <span className="block text-sm uppercase tracking-[0.28em] text-amber-200">
               Carvo tenant
             </span>
-            <span className="text-lg font-semibold text-white">Putra Auto Rental</span>
+            <span className="text-lg font-semibold text-white">
+              {storefront.brand.displayName}
+            </span>
           </div>
         </Link>
         <Link
@@ -54,9 +56,18 @@ export default function PutraAutoRentalPage() {
             Premium airport car rental, ready when your flight lands.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-300">
-            Putra Auto Rental is the first Carvo tenant storefront: branded,
+            {storefront.brand.tagline} This Carvo tenant storefront is branded,
             marketplace-ready, flight-aware, and optimized for mobile booking.
           </p>
+
+          <div className="mt-5 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-stone-300">
+            Data source:{" "}
+            <span className="ml-1 text-amber-200">
+              {storefront.source === "supabase"
+                ? "Supabase live tenant data"
+                : "Preview data until migration is applied"}
+            </span>
+          </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
             {badges.map((badge) => (
@@ -69,7 +80,11 @@ export default function PutraAutoRentalPage() {
 
           <div className="glass-panel mt-8 rounded-[2rem] p-4">
             <div className="grid gap-3 md:grid-cols-4">
-              <SearchTile icon={<MapPin />} label="Pickup" value="KLIA2 Door 3" />
+              <SearchTile
+                icon={<MapPin />}
+                label="Pickup"
+                value={primaryLocation?.name ?? "KLIA2 Door 3"}
+              />
               <SearchTile icon={<CalendarDays />} label="Dates" value="This weekend" />
               <SearchTile icon={<Users />} label="People" value="6 passengers" />
               <button className="gold-gradient rounded-2xl px-5 py-4 font-semibold text-black">
@@ -98,10 +113,10 @@ export default function PutraAutoRentalPage() {
             </div>
             <div className="mt-28">
               <p className="text-sm uppercase tracking-[0.3em] text-amber-200">
-                Family airport mover
+                {featuredVehicle?.features[0] ?? "Family airport mover"}
               </p>
               <h2 className="mt-2 text-4xl font-semibold text-white">
-                Perodua Alza Premium
+                {featuredVehicle?.name ?? "Perodua Alza Premium"}
               </h2>
               <p className="mt-3 text-stone-300">
                 Recommended for 6 travelers from KLIA for 3 days under RM500.
@@ -128,22 +143,26 @@ export default function PutraAutoRentalPage() {
         </div>
 
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {fleet.map(([name, seats, price, status]) => (
-            <article key={name} className="glass-panel rounded-[2rem] p-5">
+          {storefront.vehicles.map((vehicle) => (
+            <article key={vehicle.id} className="glass-panel rounded-[2rem] p-5">
               <div className="h-44 rounded-[1.5rem] bg-gradient-to-br from-stone-800 via-black to-amber-950" />
-              <h3 className="mt-5 text-xl font-semibold text-white">{name}</h3>
+              <h3 className="mt-5 text-xl font-semibold text-white">
+                {vehicle.name}
+              </h3>
               <div className="mt-4 space-y-3 text-sm text-stone-300">
                 <p className="flex items-center gap-2">
                   <Users className="size-4 text-amber-200" />
-                  {seats}
+                  {vehicle.seats} seats
                 </p>
                 <p className="flex items-center gap-2">
                   <Clock className="size-4 text-amber-200" />
-                  {status}
+                  {vehicle.homeLocationName} {vehicle.status}
                 </p>
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-5">
-                <span className="font-semibold text-amber-200">{price}</span>
+                <span className="font-semibold text-amber-200">
+                  RM{vehicle.dailyRateMyr}/day
+                </span>
                 <span className="text-sm text-stone-400">View</span>
               </div>
             </article>
@@ -153,11 +172,32 @@ export default function PutraAutoRentalPage() {
 
       <section className="mx-auto grid max-w-7xl gap-5 py-10 lg:grid-cols-3">
         <TrustPanel icon={<ShieldCheck />} value="98.7%" label="Successful handover rate" />
-        <TrustPanel icon={<Car />} value="86" label="Fleet size" />
-        <TrustPanel icon={<Sparkles />} value="4.9" label="Average rating" />
+        <TrustPanel
+          icon={<Car />}
+          value={String(storefront.vehicles.length)}
+          label="Published fleet"
+        />
+        <TrustPanel
+          icon={<Sparkles />}
+          value={averageRating(storefront.vehicles)}
+          label="Average rating"
+        />
       </section>
     </main>
   );
+}
+
+function averageRating(vehicles: Array<{ rating: number | null }>) {
+  const ratings = vehicles
+    .map((vehicle) => vehicle.rating)
+    .filter((rating): rating is number => typeof rating === "number");
+
+  if (ratings.length === 0) {
+    return "New";
+  }
+
+  const total = ratings.reduce((sum, rating) => sum + rating, 0);
+  return (total / ratings.length).toFixed(1);
 }
 
 function SearchTile({

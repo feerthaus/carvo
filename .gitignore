@@ -2,6 +2,7 @@
 node_modules/
 out/
 dist/
+supabase/.temp/
 
 .env
 .env.local
