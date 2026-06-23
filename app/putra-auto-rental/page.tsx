@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { BookingRequestForm } from "./booking-request-form";
 import { getPutraStorefront } from "@/lib/carvo/storefront";
 
 const badges = ["Verified Operator", "Top Rated", "Fast Response", "Most Booked"];
@@ -87,9 +88,12 @@ export default async function PutraAutoRentalPage() {
               />
               <SearchTile icon={<CalendarDays />} label="Dates" value="This weekend" />
               <SearchTile icon={<Users />} label="People" value="6 passengers" />
-              <button className="gold-gradient rounded-2xl px-5 py-4 font-semibold text-black">
+              <a
+                href="#book"
+                className="gold-gradient rounded-2xl px-5 py-4 text-center font-semibold text-black"
+              >
                 Check cars
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -125,6 +129,12 @@ export default async function PutraAutoRentalPage() {
           </div>
         </div>
       </section>
+
+      <BookingRequestForm
+        source={storefront.source}
+        vehicles={storefront.vehicles}
+        locations={storefront.locations}
+      />
 
       <section className="mx-auto max-w-7xl py-10">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">

@@ -45,6 +45,39 @@ body {
   background: linear-gradient(135deg, #f8d77a 0%, #f5b942 45%, #a66a12 100%);
 }
 
+.form-control {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1rem;
+  color: #fff;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.form-control:focus {
+  border-color: rgba(245, 185, 66, 0.65);
+  box-shadow: 0 0 0 4px rgba(245, 185, 66, 0.12);
+}
+
+.form-control::placeholder {
+  color: #78716c;
+}
+
+.form-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.form-control option {
+  background: #0c0a09;
+  color: #fff;
+}
+
 .text-balance {
   text-wrap: balance;
 }
