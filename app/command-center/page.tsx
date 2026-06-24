@@ -10,7 +10,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { updateBookingStatus } from "./actions";
 import { signOutCommandCenter } from "./login/actions";
+import type { ManagedBooking } from "@/lib/carvo/command-center";
 import { getPutraCommandCenterAccess } from "@/lib/carvo/access";
 import { getPutraCommandCenter } from "@/lib/carvo/command-center";
 
@@ -173,6 +175,33 @@ export default async function CommandCenterPage() {
           </section>
         </div>
 
+        <section className="glass-panel mt-5 rounded-[2.5rem] p-6">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.24em] text-amber-200">
+                Booking management
+              </p>
+              <h2 className="mt-2 text-3xl font-semibold text-white">
+                Protected requests, customer contacts, and status controls.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-6 text-stone-400">
+              These details are only rendered after an active Putra tenant
+              membership is verified.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            {commandCenter.managedBookings.length > 0 ? (
+              commandCenter.managedBookings.map((booking) => (
+                <BookingManagementCard key={booking.id} booking={booking} />
+              ))
+            ) : (
+              <EmptyState message="No protected booking rows are visible for this tenant member yet." />
+            )}
+          </div>
+        </section>
+
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <section className="glass-panel rounded-[2.5rem] p-6">
             <div className="flex items-center gap-3 text-amber-200">
@@ -228,6 +257,108 @@ export default async function CommandCenterPage() {
       </section>
     </main>
   );
+}
+
+function BookingManagementCard({ booking }: { booking: ManagedBooking }) {
+  const nextStatuses = getNextStatuses(booking.status);
+
+  return (
+    <article className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-amber-300/10 px-3 py-1 text-sm font-semibold text-amber-100">
+              {booking.reference}
+            </span>
+            <span className="rounded-full border border-white/10 px-3 py-1 text-sm text-stone-300">
+              {booking.status}
+            </span>
+          </div>
+          <h3 className="mt-4 text-2xl font-semibold text-white">
+            {booking.customerName}
+          </h3>
+          <div className="mt-4 grid gap-3 text-sm text-stone-300 md:grid-cols-2">
+            <Detail label="Email" value={booking.customerEmail} />
+            <Detail label="Phone" value={booking.customerPhone} />
+            <Detail label="Flight" value={booking.flightNumber} />
+            <Detail
+              label="Passengers"
+              value={booking.passengerCount ? String(booking.passengerCount) : "Not provided"}
+            />
+            <Detail label="Vehicle" value={booking.vehicleName} />
+            <Detail label="Pickup" value={booking.pickupLocationName} />
+            <Detail label="Pickup time" value={formatDateTime(booking.startsAt)} />
+            <Detail label="Return time" value={formatDateTime(booking.endsAt)} />
+          </div>
+          <div className="mt-4 rounded-2xl bg-black/30 p-4 text-sm leading-6 text-stone-300">
+            <span className="text-stone-500">AI intent:</span>{" "}
+            {booking.aiSearchPrompt}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-black/30 p-5">
+          <p className="text-sm uppercase tracking-[0.2em] text-stone-500">
+            Quote
+          </p>
+          <p className="mt-2 text-3xl font-semibold text-white">
+            {booking.quotedTotalMyr != null
+              ? `RM${Number(booking.quotedTotalMyr).toLocaleString("en-MY")}`
+              : "Pending"}
+          </p>
+
+          <div className="mt-6 space-y-3">
+            {nextStatuses.length > 0 ? (
+              nextStatuses.map((status) => (
+                <form key={status} action={updateBookingStatus}>
+                  <input type="hidden" name="bookingId" value={booking.id} />
+                  <input type="hidden" name="nextStatus" value={status} />
+                  <button className="w-full rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/20">
+                    Mark {status}
+                  </button>
+                </form>
+              ))
+            ) : (
+              <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-stone-400">
+                No further status transitions available.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
+      <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{label}</p>
+      <p className="mt-1 font-medium text-white">{value}</p>
+    </div>
+  );
+}
+
+function getNextStatuses(status: string) {
+  if (status === "requested") {
+    return ["quoted", "confirmed", "cancelled"];
+  }
+
+  if (status === "quoted") {
+    return ["confirmed", "cancelled"];
+  }
+
+  if (status === "confirmed") {
+    return ["completed", "cancelled"];
+  }
+
+  return [];
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-MY", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function AccessPending({

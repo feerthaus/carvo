@@ -42,6 +42,23 @@ export type CommandCenterInsight = {
   body: string;
 };
 
+export type ManagedBooking = {
+  id: string;
+  reference: string;
+  status: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  flightNumber: string;
+  passengerCount: number | null;
+  startsAt: string;
+  endsAt: string;
+  vehicleName: string;
+  pickupLocationName: string;
+  quotedTotalMyr: number | null;
+  aiSearchPrompt: string;
+};
+
 export type CommandCenterData = {
   source: "supabase";
   tenantName: string;
@@ -49,6 +66,7 @@ export type CommandCenterData = {
   metrics: CommandCenterMetric[];
   fleetRadar: FleetRadarItem[];
   airportOperations: AirportOperation[];
+  managedBookings: ManagedBooking[];
   activityEvents: CommandCenterEvent[];
   insights: CommandCenterInsight[];
   locationHeatmap: Array<{
@@ -65,8 +83,14 @@ type VehicleRow = {
 };
 
 type BookingRow = {
+  ai_search_prompt?: string | null;
+  customer_email?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
   id: string;
   ends_at: string;
+  flight_number?: string | null;
+  passenger_count?: number | null;
   pickup_location_id: string | null;
   pickup_location_name?: string;
   quoted_total_myr: number | null;
@@ -124,7 +148,7 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
     supabase
       .from("bookings")
       .select(
-        "id, customer_name, starts_at, ends_at, status, quoted_total_myr, vehicle_id, pickup_location_id",
+        "id, customer_name, customer_email, customer_phone, flight_number, passenger_count, ai_search_prompt, starts_at, ends_at, status, quoted_total_myr, vehicle_id, pickup_location_id",
       )
       .eq("tenant_id", tenant.id)
       .order("starts_at", { ascending: true })
@@ -221,6 +245,23 @@ export async function getPutraCommandCenter(): Promise<CommandCenterData> {
         eta: formatTime(booking.starts_at),
         status: booking.status,
       })),
+    managedBookings: tenantBookings.map((booking) => ({
+      id: booking.id,
+      reference: booking.id.slice(0, 8).toUpperCase(),
+      status: booking.status,
+      customerName: booking.customer_name ?? "Customer pending",
+      customerEmail: booking.customer_email ?? "Email pending",
+      customerPhone: booking.customer_phone ?? "Phone pending",
+      flightNumber: booking.flight_number ?? "Not provided",
+      passengerCount: booking.passenger_count ?? null,
+      startsAt: booking.starts_at,
+      endsAt: booking.ends_at,
+      vehicleName: vehicleNames.get(booking.vehicle_id ?? "") ?? "Vehicle pending",
+      pickupLocationName:
+        locationNames.get(booking.pickup_location_id ?? "") ?? "Pickup pending",
+      quotedTotalMyr: booking.quoted_total_myr,
+      aiSearchPrompt: booking.ai_search_prompt ?? "No AI trip intent provided.",
+    })),
     activityEvents: (activityEvents ?? []).map((event) => ({
       id: event.id,
       title: event.title,
@@ -262,6 +303,7 @@ function emptyCommandCenter(
       count: 0,
     })),
     airportOperations: [],
+    managedBookings: [],
     activityEvents: [],
     insights: [
       {
