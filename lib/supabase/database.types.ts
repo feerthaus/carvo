@@ -535,6 +535,10 @@ export type Database = {
         Returns: boolean
       }
       is_tenant_member: { Args: { target_tenant_id: string }; Returns: boolean }
+      record_public_booking_requested: {
+        Args: { target_booking_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       booking_status:

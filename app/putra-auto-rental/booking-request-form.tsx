@@ -13,7 +13,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createBookingRequest } from "./actions";
 import { initialBookingRequestState } from "./booking-request-state";
@@ -26,18 +26,24 @@ type BookingRequestFormProps = {
   source: "supabase" | "preview";
   vehicles: StorefrontVehicle[];
   locations: StorefrontLocation[];
+  selectedVehicleId?: string;
 };
 
 export function BookingRequestForm({
   source,
   vehicles,
   locations,
+  selectedVehicleId,
 }: BookingRequestFormProps) {
+  const initialVehicleId =
+    vehicles.find((vehicle) => vehicle.id === selectedVehicleId)?.id ?? vehicles[0]?.id;
+  const [activeVehicleId, setActiveVehicleId] = useState(initialVehicleId);
   const [state, formAction] = useActionState(
     createBookingRequest,
     initialBookingRequestState,
   );
   const canSubmit = source === "supabase" && vehicles.length > 0 && locations.length > 0;
+  const activeVehicle = vehicles.find((vehicle) => vehicle.id === activeVehicleId);
 
   return (
     <section id="book" className="mx-auto max-w-7xl py-10">
@@ -67,24 +73,35 @@ export function BookingRequestForm({
 
           <form action={formAction} className="p-4 sm:p-6 lg:p-8">
             {state.status === "success" ? (
-              <div className="mb-5 rounded-[2rem] border border-emerald-300/30 bg-emerald-300/10 p-5 text-emerald-50">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 size-6 shrink-0" />
-                  <div>
-                    <p className="text-lg font-semibold">
+              <div className="showroom-panel mb-5 rounded-[2rem] p-5 text-emerald-50">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                  <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-300/15 text-emerald-200">
+                    <CheckCircle2 className="size-7" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-200">
+                      Request secured
+                    </p>
+                    <p className="mt-2 text-2xl font-black text-white">
                       Booking request received
                     </p>
                     <p className="mt-2 text-sm leading-6 text-emerald-50/85">
                       {state.message}
                     </p>
-                    {state.bookingReference ? (
-                      <p className="mt-4 rounded-2xl bg-black/25 px-4 py-3 text-sm">
-                        Reference:{" "}
-                        <span className="font-semibold tracking-[0.18em]">
-                          {state.bookingReference}
-                        </span>
-                      </p>
-                    ) : null}
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      {state.bookingReference ? (
+                        <ConfirmationMetric label="Reference" value={state.bookingReference} />
+                      ) : null}
+                      <ConfirmationMetric
+                        label="Next step"
+                        value="Putra confirm"
+                      />
+                      <ConfirmationMetric label="Status" value="Requested" />
+                    </div>
+                    <p className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-stone-300">
+                      We also logged this request into the Operations Command
+                      Center activity feed so the Putra team can follow up.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -110,7 +127,8 @@ export function BookingRequestForm({
                   required
                   disabled={!canSubmit}
                   className="form-control"
-                  defaultValue={vehicles[0]?.id}
+                  value={activeVehicleId ?? ""}
+                  onChange={(event) => setActiveVehicleId(event.target.value)}
                 >
                   {vehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
@@ -119,6 +137,19 @@ export function BookingRequestForm({
                   ))}
                 </select>
               </Field>
+
+              {activeVehicle ? (
+                <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-amber-200">
+                    Selected car
+                  </p>
+                  <p className="mt-2 font-semibold text-white">{activeVehicle.name}</p>
+                  <p className="mt-1 text-sm text-stone-300">
+                    {activeVehicle.seats} seats · RM{activeVehicle.dailyRateMyr}/day ·{" "}
+                    {activeVehicle.homeLocationName}
+                  </p>
+                </div>
+              ) : null}
 
               <Field label="Pickup location" icon={<MapPin />}>
                 <select
@@ -248,6 +279,15 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
         "Request booking"
       )}
     </button>
+  );
+}
+
+function ConfirmationMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+      <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{label}</p>
+      <p className="mt-2 font-black text-white">{value}</p>
+    </div>
   );
 }
 

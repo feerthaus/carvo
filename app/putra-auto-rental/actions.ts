@@ -147,6 +147,10 @@ export async function createBookingRequest(
     };
   }
 
+  await supabase.rpc("record_public_booking_requested", {
+    target_booking_id: bookingId,
+  });
+
   return {
     status: "success",
     message:
