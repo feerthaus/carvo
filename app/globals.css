@@ -29,6 +29,19 @@ body {
     sans-serif;
 }
 
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 72%);
+}
+
 ::selection {
   background: rgba(245, 185, 66, 0.35);
   color: #fffaf0;
@@ -41,8 +54,120 @@ body {
   backdrop-filter: blur(24px);
 }
 
+.showroom-panel {
+  border: 1px solid rgba(245, 185, 66, 0.16);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025)),
+    rgba(5, 5, 5, 0.78);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(28px);
+}
+
 .gold-gradient {
   background: linear-gradient(135deg, #f8d77a 0%, #f5b942 45%, #a66a12 100%);
+}
+
+.gold-text {
+  background: linear-gradient(135deg, #ffe7a3, #f5b942 52%, #b87918);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.premium-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.premium-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: radial-gradient(circle at 20% 0%, rgba(245, 185, 66, 0.16), transparent 18rem);
+  opacity: 0.85;
+}
+
+.car-stage {
+  position: relative;
+  min-height: 28rem;
+  overflow: hidden;
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 64% 36%, rgba(245, 185, 66, 0.22), transparent 16rem),
+    linear-gradient(135deg, #151515 0%, #050505 48%, #251704 100%);
+}
+
+.car-stage::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(90deg, transparent 0 58%, rgba(245, 185, 66, 0.16) 58% 59%, transparent 59%),
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.14), transparent 9rem);
+}
+
+.car-silhouette {
+  position: absolute;
+  right: 5%;
+  bottom: 27%;
+  width: min(36rem, 92%);
+  height: 11rem;
+  border-radius: 8rem 8rem 2.4rem 2.4rem;
+  background:
+    linear-gradient(115deg, transparent 0 20%, rgba(255, 255, 255, 0.18) 20% 36%, transparent 36%),
+    linear-gradient(180deg, #4b4b4b 0%, #171717 35%, #050505 100%);
+  box-shadow:
+    0 42px 80px rgba(0, 0, 0, 0.8),
+    inset 0 2px 0 rgba(255, 255, 255, 0.16);
+}
+
+.car-silhouette::before {
+  position: absolute;
+  left: 22%;
+  top: -2.8rem;
+  width: 42%;
+  height: 5rem;
+  border-radius: 5rem 5rem 0.6rem 0.6rem;
+  content: "";
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.car-silhouette::after {
+  position: absolute;
+  inset: auto 10% -2.2rem 10%;
+  height: 4.6rem;
+  content: "";
+  background:
+    radial-gradient(circle at 14% 50%, #060606 0 2.1rem, #2b2b2b 2.15rem 2.55rem, transparent 2.6rem),
+    radial-gradient(circle at 86% 50%, #060606 0 2.1rem, #2b2b2b 2.15rem 2.55rem, transparent 2.6rem);
+}
+
+.headlight {
+  position: absolute;
+  right: 8%;
+  bottom: 36%;
+  width: 7rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(245, 185, 66, 0.9), rgba(255, 246, 209, 0.9), transparent);
+  filter: blur(0.5px);
+  box-shadow: 0 0 34px rgba(245, 185, 66, 0.55);
+}
+
+.service-image {
+  min-height: 10rem;
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 42%),
+    radial-gradient(circle at 78% 20%, rgba(245, 185, 66, 0.22), transparent 8rem),
+    linear-gradient(145deg, #282828, #070707 58%, #2b1a04);
 }
 
 .form-control {
