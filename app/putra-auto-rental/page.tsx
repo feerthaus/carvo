@@ -18,10 +18,22 @@ const badges = ["Verified Operator", "Top Rated", "Fast Response", "Most Booked"
 
 export const dynamic = "force-dynamic";
 
-export default async function PutraAutoRentalPage() {
+export default async function PutraAutoRentalPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    vehicle?: string;
+  }>;
+}) {
+  const params = searchParams ? await searchParams : {};
   const storefront = await getPutraStorefront();
   const featuredVehicle = storefront.vehicles[0];
   const primaryLocation = storefront.locations[0];
+  const selectedVehicleId = storefront.vehicles.some(
+    (vehicle) => vehicle.id === params.vehicle,
+  )
+    ? params.vehicle
+    : featuredVehicle?.id;
 
   return (
     <main className="min-h-screen overflow-hidden px-5 py-5 sm:px-8 lg:px-12">
@@ -144,9 +156,11 @@ export default async function PutraAutoRentalPage() {
       </section>
 
       <BookingRequestForm
+        key={selectedVehicleId ?? "default-booking-form"}
         source={storefront.source}
         vehicles={storefront.vehicles}
         locations={storefront.locations}
+        selectedVehicleId={selectedVehicleId}
       />
 
       <section id="fleet" className="mx-auto max-w-7xl py-14">
@@ -185,9 +199,12 @@ export default async function PutraAutoRentalPage() {
                   <span className="text-xl font-black text-amber-200">
                     RM{vehicle.dailyRateMyr}/day
                   </span>
-                  <a href="#book" className="text-sm font-semibold text-white">
+                  <Link
+                    href={`/putra-auto-rental?vehicle=${vehicle.id}#book`}
+                    className="text-sm font-semibold text-white"
+                  >
                     Book this car
-                  </a>
+                  </Link>
                 </div>
               </div>
             </article>
