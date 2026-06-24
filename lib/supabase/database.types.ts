@@ -264,6 +264,50 @@ export type Database = {
           },
         ]
       }
+      tenant_member_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["tenant_member_role"]
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          role?: Database["public"]["Enums"]["tenant_member_role"]
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          role?: Database["public"]["Enums"]["tenant_member_role"]
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_member_invites_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_memberships: {
         Row: {
           created_at: string
@@ -463,6 +507,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_tenant_invite: {
+        Args: { target_tenant_slug: string }
+        Returns: boolean
+      }
       current_user_is_platform_admin: { Args: never; Returns: boolean }
       get_public_command_center_bookings: {
         Args: { target_tenant_slug: string }

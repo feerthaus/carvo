@@ -9,11 +9,24 @@ import {
   Trophy,
 } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { signOutCommandCenter } from "./login/actions";
+import { getPutraCommandCenterAccess } from "@/lib/carvo/access";
 import { getPutraCommandCenter } from "@/lib/carvo/command-center";
 
 export const dynamic = "force-dynamic";
 
 export default async function CommandCenterPage() {
+  const access = await getPutraCommandCenterAccess();
+
+  if (access.status === "unauthenticated") {
+    redirect("/command-center/login");
+  }
+
+  if (access.status === "forbidden") {
+    return <AccessPending tenantName={access.tenantName} userEmail={access.userEmail} />;
+  }
+
   const commandCenter = await getPutraCommandCenter();
 
   return (
@@ -50,10 +63,8 @@ export default async function CommandCenterPage() {
           <div className="glass-panel rounded-3xl p-5">
             <p className="text-sm text-stone-400">Data source</p>
             <p className="mt-2 max-w-sm text-lg text-white">
-              Supabase live queries.{" "}
-              {commandCenter.hasTenantSession
-                ? "Tenant session detected."
-                : "Private booking metrics require tenant login."}
+              Signed in as {access.userEmail}. Role: {access.role}. Supabase
+              live tenant queries are active.
             </p>
           </div>
         </div>
@@ -213,6 +224,55 @@ export default async function CommandCenterPage() {
               )}
             </div>
           </section>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function AccessPending({
+  tenantName,
+  userEmail,
+}: {
+  tenantName: string;
+  userEmail: string;
+}) {
+  return (
+    <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-12">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="gold-gradient flex size-10 items-center justify-center rounded-2xl text-sm font-black text-black">
+            C
+          </span>
+          <span className="text-lg font-semibold tracking-[0.32em] text-white">
+            CARVO
+          </span>
+        </Link>
+        <form action={signOutCommandCenter}>
+          <button className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:bg-white/10">
+            Sign out
+          </button>
+        </form>
+      </nav>
+
+      <section className="flex min-h-[calc(100vh-6rem)] items-center py-12">
+        <div className="glass-panel mx-auto max-w-2xl rounded-[2.5rem] p-8">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-sm text-amber-100">
+            <Activity className="size-4" />
+            Access pending
+          </div>
+          <h1 className="text-balance text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">
+            {tenantName} Command Center is protected.
+          </h1>
+          <p className="mt-5 leading-7 text-stone-300">
+            You are signed in as <span className="text-white">{userEmail}</span>,
+            but this account does not have an active Putra tenant membership yet.
+          </p>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-black/35 p-5 text-sm leading-6 text-stone-400">
+            Ask a platform admin or tenant owner to create a pending invite for
+            this email in <span className="text-stone-200">tenant_member_invites</span>.
+            The next magic-link sign-in will automatically claim the invite.
+          </div>
         </div>
       </section>
     </main>
